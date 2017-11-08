@@ -1,16 +1,18 @@
-import {Table, Column, Model, HasMany, PrimaryKey, AutoIncrement, Default} from "sequelize-typescript";
+import {Table, Column, Model, PrimaryKey, AutoIncrement, Default, ForeignKey, HasMany} from "sequelize-typescript";
 import Board from "./board";
 
 @Table
 export default class Reply extends Model<Reply> {
 
 
-  @HasMany(() => Board)
-  bno: number[];
+  @ForeignKey(() => Board)
+  @Column
+  bno: number;
 
   @PrimaryKey
   @AutoIncrement
   @Column
+
   rno: number;
 
   @Column
@@ -23,4 +25,14 @@ export default class Reply extends Model<Reply> {
   @Default(1)
   @Column
   depth : number;
+
+  @ForeignKey(()=>Reply)
+  @Column
+  parent: number;
+
+  @Column
+  order : number;
+
+  @HasMany(() =>Reply)
+  replies : Reply[];
 }

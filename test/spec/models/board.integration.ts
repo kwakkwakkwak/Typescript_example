@@ -13,7 +13,10 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
   });
 
   const cleanUpBoard = (cb) => {
-    Board.destroy({where: {}, truncate: true}).then(() => cb());
+     Reply.destroy({where: {}, truncate: true})
+       .then(() =>
+        Board.destroy({where: {}, truncate: true})).then(() =>
+      cb());
   };
 
   beforeEach((done: Function) => {
@@ -21,20 +24,29 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
     //cleanUpReply(() => done());
   });
 
-  const save = (given, cb) => {
+  const saveBoard = (given, cb) => {
     const board = new Board(given);
     board.save()
       .then((saveBoard: Board) => {
         cb(saveBoard);
       });
   };
+  const saveReply = (given, cb) => {
+    const reply = new Reply(given);
+    reply.save()
+      .then((saveReply: Reply) => {
+        cb(saveReply);
+      });
+  };
+
+
 
   it('글을 등록 한 후에 등록한 값이 리턴된다.', (done: Function) => {
     //given
     let givenBoard = {title: 'test', content: 'test', writer: 'test'};
 
     //when
-    save(givenBoard, (saveBoard: Board) => {
+    saveBoard(givenBoard, (saveBoard: Board) => {
       //then
       expect(saveBoard.title).to.be.eql(givenBoard.title);
       expect(saveBoard.content).to.be.eql(givenBoard.content);
@@ -49,20 +61,21 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
     let givenBoard = {title: 'test', content: 'test', writer: 'test'};
 
     // when & then
-    save(givenBoard, (saveboard: Board) => {
+    saveBoard(givenBoard, (saveboard: Board) => {
       Board.findAll<Board>().then((boards: Board[]) => {
         expect(boards.length).to.be.eql(1);
         done();
       });
     });
   });
+
   it('글제목 라는 글을 검색하는 경우 글제목의 정보가 리턴된다', (done: Function) => {
 
     // given
     let givenBoard = {title: '글제목', content: '본문', writer: '글쓴이'};
 
     // when
-    save(givenBoard, (saveBoard: Board) => {
+    saveBoard(givenBoard, (saveBoard: Board) => {
       Board.findOne<Board>({where: {title: '글제목'}})
         .then((board: Board) => {
           expect(board.title).to.be.eql(givenBoard.title);
@@ -74,61 +87,92 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
   it('글제목, 글제목2 라는 글 중에 글제목2라는 글을 검색하는 경우 글제목2의 정보가 리턴된다', (done: Function) => {
 
     // given
-    let title1 = {title: '글제목', content: '본문', writer: '글쓴이'};
-    let title2 = {title: '글제목2', content: '본문2', writer: '글쓴이2'};
+    let board1 = {title: '글제목', content: '본문', writer: '글쓴이'};
+    let board2 = {title: '글제목2', content: '본문2', writer: '글쓴이2'};
 
     // when
-    save(title1, () => {
-      save(title2, () => {
+    saveBoard(board1, () => {
+      saveBoard(board2, () => {
         Board.findOne<Board>({where: {title: '글제목2'}}).then((board: Board) => {
-          expect(board.get('title')).to.be.eql(title2.title);
+          expect(board.get('title')).to.be.eql(board2.title);
           done();
         });
       });
-
     });
   });
 
-  it('글제목 이라는 글에 댓글을 추가하고, 댓글정보가 리턴된다.', (done: Function) => {
-    //given
-    const reply = new Reply({reply: '댓글', writer: '댓글쓴이'});
-    const title = new Board({title: '글제목', content: '본문', writer: '글쓴이'});
+  it("글제목 이라는 글의 content 를 'updated_content'로 바꾼 뒤 정보가 리턴된다.", (done: Function) => {
 
-    //when
-    reply.save()
-      .then((saveReply: Reply) => {
-        title.save().then((saveBoard: Board) => {
-          saveReply.$add('bno', saveBoard);
-          Reply.findAll<Reply>({include: [Board]}).then((replies: Reply[]) => {
-            const reply = replies[0];
-            //console.log(reply.get('bno'));
-            expect(reply.bno.length).to.be.eql(1);
-            done();
-          });
+    // given
+    let beforeBoard = {title: '글제목', content: '본문', writer: '글쓴이'};
+    let afterBoard = {title: '글제목', content: 'updated_content', writer: '글쓴이'};
+
+    // when
+    saveBoard(beforeBoard, () => {
+      Board.update(afterBoard,{where:{title:'글제목'}}).then(() =>{
+        Board.findOne<Board>({where:{title: '글제목'}}).then((board: Board) => {
+          expect(board.get('content')).to.be.eql(afterBoard.content);
+          done();
         });
       });
+    });
   });
+
+  // it("title 이 글제목인 글에 댓글을 추가한다.", (done: Function) =>{
+  //   const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
+  //   const reply = new Reply({reply:'reply',writer:'글쓴이'});
   //
-  // it('글제목 이라는 글에 댓글을 추가하고, 그 댓글에 댓글을 추가하고 그정보가 리턴된다.', (done: Function) => {
-  //   //given
-  //   const reply = new Reply({reply: '댓글', writer: '댓글쓴이'});
-  //   const reply_reply = new Reply({reply:"대댓글",writer:"대댓글쓴이"});
-  //   const title = new Board({title: '글제목', content: '본문', writer: '글쓴이'});
+  //   board.save().then((saveBoard:Board) =>{
+  //     reply.save().then((saveReply:Reply) =>{
+  //       saveBoard.$add('reply',saveReply);
+  //       Board.findAll<Board>({include:[Reply]}).then((boards:Board[])=>{
+  //         const board = boards[0];
+  //         expect(board.replies.length).to.be.eql(1);
+  //         done();
+  //       });
+  //     });
+  //   });
+  // });
   //
-  //   //when
-  //   reply_reply.save().then((saveReReply: Reply) =>{
-  //     reply.save().then((saveReply: Reply) => {
-  //       title.save().then((saveBoard: Board) => {
-  //         saveReply.$add('bno', saveBoard);
-  //         saveReReply.$add('bno',saveReply);
-  //         Reply.findAll<Reply>({include: [Board]}).then((replies: Reply[]) => {
-  //           const reply = replies[0];
-  //           //console.log(reply.get('bno'));
-  //           expect(reply.bno.length).to.be.eql(1);
+  //
+  // it("title 이 글제목인 글에 댓글을 추가하고 댓글을 하나 더 추가 한다.", (done: Function) =>{
+  //   const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
+  //   const reply = new Reply({reply:'reply',writer:'글쓴이'});
+  //   const reply2 = new Reply({reply:'reply',writer:'글쓴이'});
+  //
+  //   board.save().then((saveBoard:Board) =>{
+  //     reply.save().then((saveReply:Reply) =>{
+  //       saveBoard.$add('reply',saveReply);
+  //       reply2.save().then((saveReply:Reply) => {
+  //         saveBoard.$add('reply',saveReply);
+  //         Board.findAll<Board>({include: [Reply]}).then((boards: Board[]) => {
+  //           const board = boards[0];
+  //           expect(board.replies.length).to.be.eql(2);
   //           done();
   //         });
   //       });
   //     });
   //   });
   // });
+  //
+  // it("title 이 글제목인 글에 댓글을 추가한다.", (done: Function) =>{
+  //   const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
+  //   const reply = new Reply({reply:'reply',writer:'글쓴이'});
+  //   const reply2 = new Reply({reply:'reply',writer:'글쓴이',depth:2});
+  //
+  //   board.save().then((saveBoard:Board) =>{
+  //     reply.save().then((saveReply:Reply) =>{
+  //       saveBoard.$add('reply',saveReply);
+  //       reply2.save().then((saveReply:Reply) => {
+  //         saveBoard.$add('reply',saveReply);
+  //         Board.findAll<Board>({include: [Reply]}).then((boards: Board[]) => {
+  //           const board = boards[0];
+  //           expect(board.replies.length).to.be.eql(2);
+  //           done();
+  //         });
+  //       });
+  //     });
+  //   });
+  // });
+
 });
