@@ -21,17 +21,16 @@ export default class Reply extends Model<Reply> {
   @Column
   writer : string;
 
-
-  @Default(1)
-  @Column
-  depth : number;
+  // @Default(1)
+  // @Column
+  // depth : number;
 
   @ForeignKey(()=>Reply)
   @Column
   parent: number;
 
-  @Column
-  order : number;
+  // @Column
+  // order : number;
 
   @HasMany(() =>Reply)
   replies : Reply[];
