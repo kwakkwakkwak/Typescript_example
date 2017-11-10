@@ -213,29 +213,72 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
     });
   });
 
-  // // 댓글의 댓글
-  //
-  // it("title 이 글제목인 글에 댓글을 추가하고 그 댓글의 댓글을 추가하고 그정보를 가져온다.", (done: Function) =>{
-  //   const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
-  //   const reply = new Reply({reply:'reply',writer:'글쓴이'});
-  //
-  //   board.save().then((saveBoard:Board) =>{
-  //     reply.save().then((saveReply:Reply) =>{
-  //       saveBoard.$add('reply',saveReply);
-  //       Board.findAll<Board>({include:[Reply]}).then((boards:Board[])=>{
-  //         const board = boards[0];
-  //         expect(board.replies.length).to.be.eql(1);
-  //         done();
-  //       });
-  //     });
-  //   });
-  // });
+  // 댓글의 댓글
 
-  // 댓글 삭제
+  it("title 이 글제목인 글에 댓글을 추가하고 그 댓글의 댓글을 추가하고 그정보를 가져온다.", (done: Function) =>{
+    const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
+    const reply = new Reply({reply:'reply',writer:'글쓴이'});
+    const rereply = new Reply({reply:'rereply',writer:'대댓글쓴이'});
+
+    board.save().then((saveBoard:Board) =>{
+      reply.save().then((saveReply:Reply) =>{
+        saveBoard.$add('reply',saveReply);
+        rereply.save().then((saveReRepy:Reply) =>{
+          saveBoard.$add('reply',saveReRepy);
+          saveReply.$add('reply',saveReRepy);
+          Board.findAll<Board>({include:[Reply]}).then((boards:Board[])=>{
+            const board = boards[0];
+            expect(board.replies.length).to.be.eql(2);
+            Reply.findAll<Reply>({include:[Reply]}).then((replys:Reply[]) => {
+              const reply = replys[0];
+              expect(reply.replies.length).to.be.eql(1);
+              done();
+            });
+          });
+        });
+      });
+    });
+  });
 
   // 댓글의 댓글 삭제
 
-  // 댓글의 댓글이 있을 경우 삭제
+  it("title 이 글제목인 글에 댓글을 추가하고 그 댓글의 댓글을 추가하고 댓글의 댓글을 삭제한다.", (done: Function) =>{
+    const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
+    const reply = new Reply({reply:'reply',writer:'글쓴이'});
+    const rereply = new Reply({reply:'rereply',writer:'대댓글쓴이'});
+    const deleteReply = {reply:'삭제된 댓글입니다.',writer:''}
+
+    board.save().then((saveBoard:Board) =>{
+      reply.save().then((saveReply:Reply) =>{
+        saveBoard.$add('reply',saveReply);
+        rereply.save().then((saveReRepy:Reply) =>{
+          saveBoard.$add('reply',saveReRepy);
+          saveReply.$add('reply',saveReRepy);
+          Board.findAll<Board>({include:[Reply]}).then((boards:Board[])=>{
+            const board = boards[0];
+            expect(board.replies.length).to.be.eql(2);
+            Reply.findAll<Reply>({include:[Reply]}).then((replys:Reply[]) => {
+              const reply = replys[0];
+              expect(reply.replies.length).to.be.eql(1);
+              Reply.findOne<Reply>({where:{reply:'rereply'}}).then((savedRereply:Reply) =>{
+                const rno = savedRereply.get('rno');
+                Reply.update(deleteReply,{where:{rno:rno}}).then(() =>{
+                  Reply.findOne<Reply>({where:{rno:rno}}).then((updatedRereply:Reply) =>{
+                    expect(updatedRereply.get('reply')).to.be.eql('삭제된 댓글입니다.');
+                    done();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  // 댓글의 댓글이 있을 경우 댓글의 삭제
+
+  // 댓글의 댓글이 있을 경우 게시글 삭제
 
 
   // it("title 이 글제목인 글에 댓글을 추가한다.", (done: Function) =>{
