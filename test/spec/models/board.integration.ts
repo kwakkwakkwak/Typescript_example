@@ -334,7 +334,10 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
               Board.destroy({where:{title:'title'},truncate:true}).then(() => {
                 Board.findOne<Board>({where:{title: '글제목'}}).then((savedBoard: Board) => {
                   expect(savedBoard).to.be.eql(null);
-                  done();
+                  Reply.findAll<Reply>({include:[Reply]}).then((deletedreplys:Reply[]) => {
+                    expect(deletedreplys.length).to.be.eql(0);
+                    done();
+                  });
                 });
               });
             });
