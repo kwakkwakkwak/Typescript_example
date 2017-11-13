@@ -3,5 +3,5 @@ dist
 dist_test
 .idea
 src/server.js.map
-src/**/*.js*
+src/**/*.js
 test/**/*.js*

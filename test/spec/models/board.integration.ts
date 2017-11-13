@@ -282,7 +282,7 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
     const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
     const reply = new Reply({reply:'reply',writer:'글쓴이'});
     const rereply = new Reply({reply:'rereply',writer:'대댓글쓴이'});
-    const deleteReply = {reply:'삭제된 댓글입니다.',writer:''}
+    const deleteReply = {reply:'삭제된 댓글입니다.',writer:''};
 
     board.save().then((saveBoard:Board) =>{
       reply.save().then((saveReply:Reply) =>{
@@ -347,25 +347,8 @@ describe("[Integration] 게시판 모델을 테스트 한다", () => {
     });
   });
 
+  //댓글의 댓글을 추가 하
 
-  // it("title 이 글제목인 글에 댓글을 추가한다.", (done: Function) =>{
-  //   const board = new Board({title:'title',content:'본문',writer:'글쓴이'});
-  //   const reply = new Reply({reply:'reply',writer:'글쓴이'});
-  //   const reply2 = new Reply({reply:'reply',writer:'글쓴이',depth:2});
-  //
-  //   board.save().then((saveBoard:Board) =>{
-  //     reply.save().then((saveReply:Reply) =>{
-  //       saveBoard.$add('reply',saveReply);
-  //       reply2.save().then((saveReply:Reply) => {
-  //         saveBoard.$add('reply',saveReply);
-  //         Board.findAll<Board>({include: [Reply]}).then((boards: Board[]) => {
-  //           const board = boards[0];
-  //           expect(board.replies.length).to.be.eql(2);
-  //           done();
-  //         });
-  //       });
-  //     });
-  //   });
-  // });
 
+  
 });
